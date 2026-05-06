@@ -41,7 +41,13 @@ def build_vn() -> MyVanna:
         "model_name": os.environ.get("VERTEX_MODEL", "gemini-2.0-flash-001"),
         "temperature": float(os.environ.get("VERTEX_TEMPERATURE", "0.2")),
     }
-    return MyVanna(config=config)
+    print("  [build_vn] config assembled, calling MyVanna()...", flush=True)
+    print(f"  [build_vn]   pgvector host : {os.environ.get('PGVECTOR_CONN','(not set)').split('@')[-1]}", flush=True)
+    print(f"  [build_vn]   vertex project: {os.environ.get('VERTEX_PROJECT','(not set)')}", flush=True)
+    print("  [build_vn] NOTE: first run downloads the sentence-transformers embedding model (~80 MB) — may take a minute with no output.", flush=True)
+    vn = MyVanna(config=config)
+    print("  [build_vn] MyVanna ready.", flush=True)
+    return vn
 
 
 def main() -> None:

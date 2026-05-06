@@ -37,12 +37,14 @@ class CitiVertexAIChat(VannaBase):
     """LLM mixin that calls a Citi-internal Vertex AI gateway."""
 
     def __init__(self, config=None):
+        print("  [LLM] initialising VannaBase...", flush=True)
         VannaBase.__init__(self, config=config)
         config = config or {}
 
         ca_bundle = config.get("ca_bundle") or os.environ.get("REQUESTS_CA_BUNDLE")
         if ca_bundle:
             os.environ["REQUESTS_CA_BUNDLE"] = ca_bundle
+            print(f"  [LLM] CA bundle set: {ca_bundle}", flush=True)
 
         project = config.get("project") or os.environ.get("VERTEX_PROJECT")
         api_endpoint = config.get("api_endpoint") or os.environ.get("VERTEX_ENDPOINT")
@@ -52,15 +54,24 @@ class CitiVertexAIChat(VannaBase):
                 "(or VERTEX_PROJECT / VERTEX_ENDPOINT env vars)."
             )
 
+        print("  [LLM] fetching helix token...", flush=True)
+        token = _get_helix_token()
+        print(f"  [LLM] token fetched (len={len(token)})", flush=True)
+
+        print(f"  [LLM] calling vertexai.init(project={project!r})...", flush=True)
         vertexai.init(
             project=project,
             api_transport="rest",
             api_endpoint=api_endpoint,
-            credentials=Credentials(_get_helix_token()),
+            credentials=Credentials(token),
         )
+        print("  [LLM] vertexai.init done.", flush=True)
 
         self.model_name = config.get("model_name", "gemini-2.0-flash-001")
+        print(f"  [LLM] loading GenerativeModel({self.model_name!r})...", flush=True)
         self.model = GenerativeModel(self.model_name)
+        print("  [LLM] model ready.", flush=True)
+
         self.temperature = config.get("temperature", 0.2)
         self.top_p = config.get("top_p", 1.0)
         self.top_k = config.get("top_k", 40)
